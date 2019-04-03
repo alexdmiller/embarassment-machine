@@ -1,2 +1,7 @@
 .DS_Store
 corpus.txt
+src/corpus.txt
+src/bigcorpus.txt
+src/dist/corpus*
+src/dist/bigcorpus*
+src/.cache
