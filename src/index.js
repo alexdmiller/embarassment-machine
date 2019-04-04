@@ -1,4 +1,4 @@
-import corpusPath from './bigcorpus.txt'
+import corpusPath from './corpus.txt'
 
 if(typeof(String.prototype.trim) === "undefined") {
   String.prototype.trim = function() {
@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", function() {
   let needle = "";
   let lines = [];
   let matchLineIndices = [];
+  let matchIdx = 0;
+
 
   document.getElementById('msgDiv').innerHTML = 'Loading.................'
 
@@ -51,18 +53,12 @@ document.addEventListener("DOMContentLoaded", function() {
       needle += e.key;
     }
 
-    console.log(needle);
-  });
-
-  fetch(corpusPath).then((res) => res.text()).then(data => {
-    document.getElementById('msgDiv').innerHTML = 'Searching............................'
-
     const pattern = `.+${needle}.+`
     const re = new RegExp(pattern, 'g')
 
-    lines = data.split('\n');
-
+    matchLineIndices = [];
     let line = ''
+    matchIdx = 0;
     lines.forEach((line, idx) => {
       line = lines[idx];
       if(line.match(re)) {
@@ -70,9 +66,15 @@ document.addEventListener("DOMContentLoaded", function() {
       }
     });
 
+    console.log(needle);
+  });
+
+  fetch(corpusPath).then((res) => res.text()).then(data => {
+    document.getElementById('msgDiv').innerHTML = 'Searching............................'
+
+    lines = data.split('\n');
 
     let lineIdx = 0;
-    let matchIdx = 0;
     let skipFrameCounter = 0;
     function showMessages() {
       if(skipFrameCounter % 3 == 0) {      
@@ -103,7 +105,7 @@ document.addEventListener("DOMContentLoaded", function() {
           // make the div align on 0......... and the width be huge still.........
           // set the big width on the div, not the body...........????????
           const singleCharOffsetPx = 60;
-          const offsetFromLeft = 700;
+          const offsetFromLeft = 600;
           document.getElementById('msgDiv').style.left = `${
             0 - (singleCharOffsetPx*needleSubIndex) + offsetFromLeft
           }px`;
