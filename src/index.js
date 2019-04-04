@@ -33,14 +33,14 @@ document.addEventListener("DOMContentLoaded", function() {
       alert('Web Audio API is not supported in this browser');
     }
 
-    const bufferSize = 4096;
+    const bufferSize = 256;
     const myPCMProcessingNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
 
     myPCMProcessingNode.onaudioprocess = function(e) {
       const output = e.outputBuffer.getChannelData(0);
       for (var i = 0; i < bufferSize; i++) {
         // Generate and copy over PCM samples.
-        output[i] = Math.random() * 2 - 1;
+        output[i] = Math.sin(2*Math.PI/matchLineIndices.length*i);
       }
     }
 
@@ -67,7 +67,9 @@ document.addEventListener("DOMContentLoaded", function() {
 
     needleWords.forEach(word => {
       var prefix = word.substring(0, 3);
-      candidateLineIndices = candidateLineIndices.concat(letterMap[prefix]);
+      if(typeof letterMap[prefix] !== 'undefined') {
+        candidateLineIndices = candidateLineIndices.concat(letterMap[prefix]);
+      }
 
       // if (candidateLineIndices.length > 0) {
       //   candidateLineIndices = candidateLineIndices.reduce((a, b) => {
@@ -82,14 +84,19 @@ document.addEventListener("DOMContentLoaded", function() {
     matchLineIndices = [];
     let line = ''
     matchIdx = 0;
-    candidateLineIndices.forEach(lineIndex => {
-    
+
+    candidateLineIndices.forEach(lineIndex => {    
       line = lines[lineIndex];
       if(line.match(re)) {
 
         matchLineIndices.push(lineIndex);
       }
     });
+
+    // no matches? reset needle to nothing.
+    if(matchLineIndices.length === 0) {
+      needle = '';
+    }
   });
 
   fetch(corpusPath).then((res) => res.text()).then(data => {
@@ -116,8 +123,6 @@ document.addEventListener("DOMContentLoaded", function() {
       letterMap[prefix] = Object.keys(letterMap[prefix]).map(str => parseInt(str));
     });
 
-    console.log(letterMap['a']);
-
     document.getElementById('msgDiv').innerHTML = 'Searching............................'
 
     let lineIdx = 0;
@@ -135,6 +140,7 @@ document.addEventListener("DOMContentLoaded", function() {
           
           // show matching messages, visually aligning needle
           var lineIndex = matchLineIndices[matchIdx % matchLineIndices.length];
+
           msg = lines[lineIndex];
           // matchIdx = (matchIdx + 1 == matchLineIndices.length)? 0 : matchIdx + 1;
           msg = msg.trim();
@@ -142,18 +148,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
           const needleSubIndex = msg.indexOf(needle);
 
-          // console.log('needleSubIndex', needleSubIndex);
-          // FIXME
-          // FIXME
-          // FIXME
-          // FIXME
-          // FIXME
-          // FIXME
-          // FIXME
-          // a very huge width on the body makes the div centered on that 
-          // huge div................ which does not work.
-          // make the div align on 0......... and the width be huge still.........
-          // set the big width on the div, not the body...........????????
           const singleCharOffsetPx = 60;
           const offsetFromLeft = 600;
           document.getElementById('msgDiv').style.left = `${
