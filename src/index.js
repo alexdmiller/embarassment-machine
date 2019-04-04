@@ -33,18 +33,16 @@ document.addEventListener("DOMContentLoaded", function() {
       alert('Web Audio API is not supported in this browser');
     }
 
-    const bufferSize = 256;
-    const myPCMProcessingNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
+    var oscillator = audioContext.createOscillator();
+    oscillator.type = 'square';
+    oscillator.frequency.setValueAtTime(3000, audioContext.currentTime); // value in hertz
+    oscillator.connect(audioContext.destination);
+    oscillator.start();
 
-    myPCMProcessingNode.onaudioprocess = function(e) {
-      const output = e.outputBuffer.getChannelData(0);
-      for (var i = 0; i < bufferSize; i++) {
-        // Generate and copy over PCM samples.
-        output[i] = Math.sin(2*Math.PI/matchLineIndices.length*i);
-      }
-    }
+    setInterval(() => {
+      oscillator.frequency.setValueAtTime(matchLineIndices.length, audioContext.currentTime); // value in hertz
+    }, 100);
 
-    myPCMProcessingNode.connect(audioContext.destination);
   });
 
   document.addEventListener('keydown', (e) => {
@@ -61,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function() {
     //     (e.keycode > 218 && e.keycode < 223)) {
       needle += e.key;
     }
-
+ 
     let needleWords = needle.split(' ');
     let candidateLineIndices = [];
 
