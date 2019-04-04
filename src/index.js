@@ -1,11 +1,21 @@
 import corpusPath from './bigcorpus.txt'
 
+if(typeof(String.prototype.trim) === "undefined") {
+  String.prototype.trim = function() {
+    return String(this).replace(/^\s+|\s+$/g, '');
+  };
+}
+
+function flickerThroughAllMessages(lines) {
+
+}
+
 document.addEventListener("DOMContentLoaded", function() {
   let needle = "";
   let lines = [];
   let matchLineIndices = [];
 
-  document.getElementById('msg').innerHTML = 'Loading.................'
+  document.getElementById('msgDiv').innerHTML = 'Loading.................'
 
   document.addEventListener('click', () => {
     function myPCMSource() {  
@@ -45,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function() {
   });
 
   fetch(corpusPath).then((res) => res.text()).then(data => {
-    document.getElementById('msg').innerHTML = 'Searching............................'
+    document.getElementById('msgDiv').innerHTML = 'Searching............................'
 
     const pattern = `.+${needle}.+`
     const re = new RegExp(pattern, 'g')
@@ -54,10 +64,59 @@ document.addEventListener("DOMContentLoaded", function() {
 
     let line = ''
     lines.forEach((line, idx) => {
-      line = data[idx];
+      line = lines[idx];
       if(line.match(re)) {
         matchLineIndices.push(idx);
       }
     });
+
+
+    let lineIdx = 0;
+    let matchIdx = 0;
+    let skipFrameCounter = 0;
+    function showMessages() {
+      if(skipFrameCounter % 3 == 0) {      
+        let msg = '';
+
+        if(needle == '') {
+          // loop through all messages, sometimes slowing down
+          msg = lines[lineIdx];
+          lineIdx = (lineIdx + 1 == lines.length)? 0 : lineIdx + 1;
+        } else {
+          // show matching messages, visually aligning needle
+          msg = lines[matchLineIndices[matchIdx]];
+          matchIdx = (matchIdx + 1 == matchLineIndices.length)? 0 : matchIdx + 1;
+          msg = msg.trim();
+
+          const needleSubIndex = msg.indexOf(needle);
+
+          // console.log('needleSubIndex', needleSubIndex);
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // a very huge width on the body makes the div centered on that 
+          // huge div................ which does not work.
+          // make the div align on 0......... and the width be huge still.........
+          // set the big width on the div, not the body...........????????
+          const singleCharOffsetPx = 60;
+          const offsetFromLeft = 700;
+          document.getElementById('msgDiv').style.left = `${
+            0 - (singleCharOffsetPx*needleSubIndex) + offsetFromLeft
+          }px`;
+        }
+
+        document.getElementById('msgDiv').innerHTML = msg;
+      }
+
+      skipFrameCounter++;
+      // TODO slow down randomly from time to time
+      window.requestAnimationFrame(showMessages);
+    }
+
+    window.requestAnimationFrame(showMessages);
   });
 });

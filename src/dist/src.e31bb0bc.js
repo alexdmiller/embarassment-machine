@@ -5,6 +5,8 @@
 //
 // anything defined in a previous bundle is accessed via the
 // orig method which is the require for previous bundles
+
+// eslint-disable-next-line no-global-assign
 parcelRequire = (function (modules, cache, entry, globalName) {
   // Save the require from previous bundle to this closure if any
   var previousRequire = typeof parcelRequire === 'function' && parcelRequire;
@@ -75,16 +77,8 @@ parcelRequire = (function (modules, cache, entry, globalName) {
     }, {}];
   };
 
-  var error;
   for (var i = 0; i < entry.length; i++) {
-    try {
-      newRequire(entry[i]);
-    } catch (e) {
-      // Save first error but execute all entries
-      if (!error) {
-        error = e;
-      }
-    }
+    newRequire(entry[i]);
   }
 
   if (entry.length) {
@@ -109,13 +103,6 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   // Override the current require with this new one
-  parcelRequire = newRequire;
-
-  if (error) {
-    // throw error from earlier, _after updating parcelRequire_
-    throw error;
-  }
-
   return newRequire;
 })({"bigcorpus.txt":[function(require,module,exports) {
 module.exports = "/bigcorpus.97c74522.txt";
@@ -126,10 +113,18 @@ var _bigcorpus = _interopRequireDefault(require("./bigcorpus.txt"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+if (typeof String.prototype.trim === "undefined") {
+  String.prototype.trim = function () {
+    return String(this).replace(/^\s+|\s+$/g, '');
+  };
+}
+
+function flickerThroughAllMessages(lines) {}
+
 document.addEventListener("DOMContentLoaded", function () {
   var needle = "love";
   var lines = [];
-  document.getElementById('msg').innerHTML = 'Loading.................';
+  document.getElementById('msgDiv').innerHTML = 'Loading.................';
   document.addEventListener('click', function () {
     function myPCMSource() {
       return; // For example, generate noise samples.
@@ -161,22 +156,66 @@ document.addEventListener("DOMContentLoaded", function () {
   fetch(_bigcorpus.default).then(function (res) {
     return res.text();
   }).then(function (data) {
-    document.getElementById('msg').innerHTML = 'Searching............................';
+    document.getElementById('msgDiv').innerHTML = 'Searching............................';
     var pattern = ".+".concat(needle, ".+");
     var re = new RegExp(pattern, 'g');
     lines = data.split('\n');
     var matchLineIndices = [];
     var line = '';
     lines.forEach(function (line, idx) {
-      line = data[idx];
+      line = lines[idx];
 
       if (line.match(re)) {
         matchLineIndices.push(idx);
       }
     });
+    var lineIdx = 0;
+    var matchIdx = 0;
+    var skipFrameCounter = 0;
+
+    function showMessages() {
+      if (skipFrameCounter % 3 == 0) {
+        var msg = '';
+
+        if (needle == '') {
+          // loop through all messages, sometimes slowing down
+          msg = lines[lineIdx];
+          lineIdx = lineIdx + 1 == lines.length ? 0 : lineIdx + 1;
+        } else {
+          // show matching messages, visually aligning needle
+          msg = lines[matchLineIndices[matchIdx]];
+          matchIdx = matchIdx + 1 == matchLineIndices.length ? 0 : matchIdx + 1;
+          msg = msg.trim();
+          var needleSubIndex = msg.indexOf(needle); // console.log('needleSubIndex', needleSubIndex);
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // FIXME
+          // a very huge width on the body makes the div centered on that 
+          // huge div................ which does not work.
+          // make the div align on 0......... and the width be huge still.........
+          // set the big width on the div, not the body...........????????
+
+          var singleCharOffsetPx = 60;
+          var offsetFromLeft = 700;
+          document.getElementById('msgDiv').style.left = "".concat(0 - singleCharOffsetPx * needleSubIndex + offsetFromLeft, "px");
+        }
+
+        document.getElementById('msgDiv').innerHTML = msg;
+      }
+
+      skipFrameCounter++; // TODO slow down randomly from time to time
+
+      window.requestAnimationFrame(showMessages);
+    }
+
+    window.requestAnimationFrame(showMessages);
   });
 });
-},{"./bigcorpus.txt":"bigcorpus.txt"}],"../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./bigcorpus.txt":"bigcorpus.txt"}],"../../../../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -198,46 +237,26 @@ function Module(moduleName) {
 }
 
 module.bundle.Module = Module;
-var checkedAssets, assetsToAccept;
 var parent = module.bundle.parent;
 
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52045" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54888" + '/');
 
   ws.onmessage = function (event) {
-    checkedAssets = {};
-    assetsToAccept = [];
     var data = JSON.parse(event.data);
 
     if (data.type === 'update') {
-      var handled = false;
+      console.clear();
+      data.assets.forEach(function (asset) {
+        hmrApply(global.parcelRequire, asset);
+      });
       data.assets.forEach(function (asset) {
         if (!asset.isNew) {
-          var didAccept = hmrAcceptCheck(global.parcelRequire, asset.id);
-
-          if (didAccept) {
-            handled = true;
-          }
+          hmrAccept(global.parcelRequire, asset.id);
         }
-      }); // Enable HMR for CSS by default.
-
-      handled = handled || data.assets.every(function (asset) {
-        return asset.type === 'css' && asset.generated.js;
       });
-
-      if (handled) {
-        console.clear();
-        data.assets.forEach(function (asset) {
-          hmrApply(global.parcelRequire, asset);
-        });
-        assetsToAccept.forEach(function (v) {
-          hmrAcceptRun(v[0], v[1]);
-        });
-      } else {
-        window.location.reload();
-      }
     }
 
     if (data.type === 'reload') {
@@ -325,7 +344,7 @@ function hmrApply(bundle, asset) {
   }
 }
 
-function hmrAcceptCheck(bundle, id) {
+function hmrAccept(bundle, id) {
   var modules = bundle.modules;
 
   if (!modules) {
@@ -333,27 +352,9 @@ function hmrAcceptCheck(bundle, id) {
   }
 
   if (!modules[id] && bundle.parent) {
-    return hmrAcceptCheck(bundle.parent, id);
+    return hmrAccept(bundle.parent, id);
   }
 
-  if (checkedAssets[id]) {
-    return;
-  }
-
-  checkedAssets[id] = true;
-  var cached = bundle.cache[id];
-  assetsToAccept.push([bundle, id]);
-
-  if (cached && cached.hot && cached.hot._acceptCallbacks.length) {
-    return true;
-  }
-
-  return getParents(global.parcelRequire, id).some(function (id) {
-    return hmrAcceptCheck(global.parcelRequire, id);
-  });
-}
-
-function hmrAcceptRun(bundle, id) {
   var cached = bundle.cache[id];
   bundle.hotData = {};
 
@@ -378,6 +379,10 @@ function hmrAcceptRun(bundle, id) {
 
     return true;
   }
+
+  return getParents(global.parcelRequire, id).some(function (id) {
+    return hmrAccept(global.parcelRequire, id);
+  });
 }
-},{}]},{},["../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/src.e31bb0bc.js.map
+},{}]},{},["../../../../../../../../usr/local/lib/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
+//# sourceMappingURL=/src.e31bb0bc.map
