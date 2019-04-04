@@ -16,7 +16,7 @@ document.addEventListener("DOMContentLoaded", function() {
   let matchLineIndices = [];
   let matchIdx = 0;
   // array of positions -> maps of letters -> arrays of line indices
-  let letterMap = [];
+  let letterMap = {};
 
   document.getElementById('msgDiv').innerHTML = 'Loading.................'
 
@@ -62,14 +62,12 @@ document.addEventListener("DOMContentLoaded", function() {
       needle += e.key;
     }
 
-    console.log('needle before', needle);
     let needleWords = needle.split(' ');
     let candidateLineIndices = [];
 
     needleWords.forEach(word => {
-      [...word].forEach((char, charIndex) => {
-        candidateLineIndices = candidateLineIndices.concat(letterMap[charIndex][char]);
-      });
+      var prefix = word.substring(0, 3);
+      candidateLineIndices = candidateLineIndices.concat(letterMap[prefix]);
 
       // if (candidateLineIndices.length > 0) {
       //   candidateLineIndices = candidateLineIndices.reduce((a, b) => {
@@ -78,10 +76,6 @@ document.addEventListener("DOMContentLoaded", function() {
       // }
     })
 
-    candidateLineIndices = candidateLineIndices.filter((v, i, a) => a.indexOf(v) === i); 
-
-    console.log(candidateLineIndices);
-
     const pattern = `.+${needle}.+`
     const re = new RegExp(pattern, 'g')
 
@@ -89,58 +83,62 @@ document.addEventListener("DOMContentLoaded", function() {
     let line = ''
     matchIdx = 0;
     candidateLineIndices.forEach(lineIndex => {
-      
-
+    
       line = lines[lineIndex];
       if(line.match(re)) {
 
         matchLineIndices.push(lineIndex);
       }
     });
-
-    console.log("needle = ", needle);
   });
 
   fetch(corpusPath).then((res) => res.text()).then(data => {
-    console.log('parsing.....');
-
     lines = data.split('\n');
 
     lines.forEach((line, lineIndex) => {
       let words = line.split(' ');
       words.forEach(word => {
-        [...word].forEach((char, charIndex) => {
-          if (typeof letterMap[charIndex] == 'undefined') {
-            letterMap[charIndex] = {};
-          }
-          
-          if (typeof letterMap[charIndex][char] == 'undefined') {
-            letterMap[charIndex][char] = [];
-          }
+        for (var windowSize = 1; windowSize <= 3; windowSize++) {
+          for (var i = 0; i < (word.length - (windowSize - 1)); i++) {
+            const prefix = word.substring(0, i);
 
+            if (typeof letterMap[prefix] == 'undefined') {
+              letterMap[prefix] = {};
+            }
 
-          letterMap[charIndex][char].push(lineIndex);
-        });
+            letterMap[prefix][lineIndex] = true;
+          }
+        }
       });
     });
+
+    Object.keys(letterMap).forEach(prefix => {
+      letterMap[prefix] = Object.keys(letterMap[prefix]).map(str => parseInt(str));
+    });
+
+    console.log(letterMap['a']);
 
     document.getElementById('msgDiv').innerHTML = 'Searching............................'
 
     let lineIdx = 0;
     let skipFrameCounter = 0;
     function showMessages() {
-      if(skipFrameCounter % 3 == 0) {      
+      if(true) {      
         let msg = '';
 
         if(needle == '') {
           // loop through all messages, sometimes slowing down
+
           msg = lines[lineIdx];
           lineIdx = (lineIdx + 1 == lines.length)? 0 : lineIdx + 1;
         } else {
+          
           // show matching messages, visually aligning needle
-          msg = lines[matchLineIndices[matchIdx]];
-          matchIdx = (matchIdx + 1 == matchLineIndices.length)? 0 : matchIdx + 1;
+          var lineIndex = matchLineIndices[matchIdx % matchLineIndices.length];
+          msg = lines[lineIndex];
+          // matchIdx = (matchIdx + 1 == matchLineIndices.length)? 0 : matchIdx + 1;
           msg = msg.trim();
+          matchIdx++;
 
           const needleSubIndex = msg.indexOf(needle);
 
