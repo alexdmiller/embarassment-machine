@@ -5,4 +5,4 @@ src/bigcorpus.txt
 src/dist/corpus*
 src/dist/bigcorpus*
 src/.cache
-src/dist
+src/dist/*

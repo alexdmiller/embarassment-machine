@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function() {
   let needle = "love";
   let lines = [];
 
-  document.getElementById('msg').innerHTML = 'Loading.................'
+  document.getElementById('msgDiv').innerHTML = 'Loading.................'
 
   document.addEventListener('click', () => {
     function myPCMSource() {  
@@ -53,7 +53,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const matchLineIndices = [];
     let line = ''
     lines.forEach((line, idx) => {
-      line = data[idx];
+      line = lines[idx];
       if(line.match(re)) {
         matchLineIndices.push(idx);
       }
@@ -69,15 +69,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if(needle == '') {
           // loop through all messages, sometimes slowing down
-          msg = data[lineIdx];
-          lineIdx = (lineIdx + 1 == data.length)? 0 : lineIdx + 1;
+          msg = lines[lineIdx];
+          lineIdx = (lineIdx + 1 == lines.length)? 0 : lineIdx + 1;
         } else {
           // show matching messages, visually aligning needle
-          msg = data[matchLineIndices[matchIdx]];
+          msg = lines[matchLineIndices[matchIdx]];
           matchIdx = (matchIdx + 1 == matchLineIndices.length)? 0 : matchIdx + 1;
           msg = msg.trim();
-
-          console.log('msg', msg);
 
           const needleSubIndex = msg.indexOf(needle);
 
